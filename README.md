@@ -12,7 +12,7 @@ USAGE:
 OPTIONS:
     -d, --database-uri <DATABASE_URI>
             Database URI [env: DATABASE_URI=] [default:
-            sqlite:///saysthbot.db]
+            sqlite:///hangitbot.db]
 
     -D, --debug
             Enable debug mode
