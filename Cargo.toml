@@ -1,0 +1,38 @@
+[package]
+name = "hangitbot"
+version = "0.1.0"
+edition = "2021"
+description = "A boring bot for hanging your boss up."
+license = "MIT OR Apache-2.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+wd_log = "0.2.0"
+futures = "0.3.29"
+strfmt = "^0.2.4"
+reqwest= "^0.11"
+rand="^0.8.5"
+#lazy_static="^1.4.0"
+
+[dependencies.clap]
+version = "4.4.6"
+features = ["derive", "env"]
+
+[dependencies.tokio]
+version = "^1.0"
+features = ["full"]
+
+[dependencies.teloxide]
+version = "^0.12"
+features = ["macros"]
+
+[dependencies.sea-orm]
+version = "^0.12.0"
+features = ["macros", "sqlx-mysql", "sqlx-sqlite", "sqlx-postgres", "runtime-tokio-rustls"]
+
+[dependencies.migration]
+path = "migration"
+
+[dependencies.models]
+path = "entity"
