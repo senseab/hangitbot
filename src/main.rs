@@ -38,15 +38,7 @@ async fn main() {
     let bot = Bot::new(args.tgbot_token.to_owned())
         .set_api_url(reqwest::Url::parse(&args.api_url.as_str()).unwrap());
 
-    match bot.get_me().send().await {
-        Ok(result) => log_info_ln!(
-            "connect succeed: id={}, botname=\"{}\"",
-            result.id,
-            result.username()
-        ),
-        Err(error) => log_panic!("{}", error),
-    }
-
+    get_me(&bot).await;
     register_commands(&bot).await;
 
     Commands::repl(bot, move |bot: Bot, message: Message, cmd: Commands| {
@@ -69,5 +61,16 @@ async fn register_commands(bot: &Bot) {
         log_error_ln!("{:?}", error);
     } else {
         log_info_ln!("commands registered")
+    }
+}
+
+async fn get_me(bot: &Bot) {
+    match bot.get_me().send().await {
+        Ok(result) => log_info_ln!(
+            "connect succeed: id={}, botname=\"{}\"",
+            result.id,
+            result.username()
+        ),
+        Err(error) => log_panic!("{}", error),
     }
 }

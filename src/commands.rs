@@ -95,8 +95,17 @@ impl CommandHandler {
         bot: &Bot,
         message: &Message,
     ) -> Result<JsonRequest<SendMessage>, Box<dyn Error + Send + Sync>> {
-        if let Some(reply) = message.reply_to_message() {
-            if let Some(user) = reply.from() {
+        let reply = match message.reply_to_message() {
+            Some(reply) => reply,
+            None => {
+                return Ok(self
+                    .send_text_reply(bot, message, BOT_TEXT_NO_TARGET.to_string())
+                    .await)
+            }
+        };
+
+        match reply.from() {
+            Some(user) => {
                 let mut vars = HashMap::new();
                 let index = OsRng.gen::<usize>() % BOT_TEXT_HANGED.len();
                 let text = BOT_TEXT_HANGED[index];
@@ -110,15 +119,10 @@ impl CommandHandler {
                 Ok(self
                     .send_text_reply(bot, reply, escape(&text.format(&vars).unwrap()))
                     .await)
-            } else {
-                Ok(self
-                    .send_text_reply(bot, message, BOT_TEXT_IS_CHANNEL.to_string())
-                    .await)
             }
-        } else {
-            Ok(self
-                .send_text_reply(bot, message, BOT_TEXT_NO_TARGET.to_string())
-                .await)
+            None => Ok(self
+                .send_text_reply(bot, message, BOT_TEXT_IS_CHANNEL.to_string())
+                .await),
         }
     }
 
