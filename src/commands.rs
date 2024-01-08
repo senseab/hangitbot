@@ -16,8 +16,9 @@ use crate::{
     config::Args,
     db_controller::Controller,
     messages::{
-        BOT_ABOUT, BOT_TEXT_HANGED, BOT_TEXT_IS_CHANNEL, BOT_TEXT_NO_TARGET, BOT_TEXT_TOP_GLOBAL,
-        BOT_TEXT_TOP_GROUP, BOT_TEXT_TOP_NONE, BOT_TEXT_TOP_TEMPLATE, BOT_TEXT_TOP_TITLE,
+        BOT_ABOUT, BOT_TEXT_HANGED, BOT_TEXT_HANGED_SELF, BOT_TEXT_IS_CHANNEL, BOT_TEXT_NO_TARGET,
+        BOT_TEXT_TOP_GLOBAL, BOT_TEXT_TOP_GROUP, BOT_TEXT_TOP_NONE, BOT_TEXT_TOP_TEMPLATE,
+        BOT_TEXT_TOP_TITLE,
     },
 };
 
@@ -106,9 +107,24 @@ impl CommandHandler {
 
         match reply.from() {
             Some(user) => {
+                let is_self = match message.from() {
+                    Some(f) => f.first_name == user.first_name,
+                    None => false,
+                };
+
                 let mut vars = HashMap::new();
-                let index = OsRng.gen::<usize>() % BOT_TEXT_HANGED.len();
-                let text = BOT_TEXT_HANGED[index];
+                
+                let index = if is_self {
+                    OsRng.gen::<usize>() % BOT_TEXT_HANGED_SELF.len()
+                } else {
+                    OsRng.gen::<usize>() % BOT_TEXT_HANGED.len()
+                };
+
+                let text = if is_self {
+                    BOT_TEXT_HANGED_SELF[index]
+                } else {
+                    BOT_TEXT_HANGED[index]
+                };
 
                 vars.insert("name".to_string(), user.first_name.as_str());
 
