@@ -39,6 +39,7 @@
             openssl
           ];
         };
+
         devShell = with pkgs; mkShell {
           buildInputs = [ 
             cargo 
@@ -52,6 +53,42 @@
             sqlite
           ];
           RUST_SRC_PATH = rustPlatform.rustLibSrc;
+        };
+
+        nixosModule =  {config, pkgs, lib, ...}: with lib; 
+        let 
+          cfg = config.services.hangitbot;
+        in {
+          options.services.hangitbot = {
+            enable = mkEnableOption "hangitbot service";
+
+            token = mkOption {
+              type = types.str;
+              example = "12345678:AAAAAAAAAAAAAAAAAAAAAAAAATOKEN";
+              description = lib.mdDoc "Telegram bot token";
+            };
+
+            tgUri = mkOption {
+              type = types.str;
+              default = "https://api.telegram.org";
+              example = "https://api.telegram.org";
+              description = lib.mdDoc "Custom telegram api URI";
+            };
+
+            extraOptions = mkOption {
+              type = types.str;
+              description = lib.mdDoc "Extra option for bot.";
+            };
+          };
+
+          config = let 
+            args = "${cfg.extraOptions} ${if isString cfg.tgUri then "--api-uri ${escapeShellArg cfg.tgUri}" else ""}";
+          in mkIf cfg.enable {
+            systemd.services.hangitbot = {
+              wantedBy = ["multi-uesr.target"];
+              serviceconfig.ExecStart = "${pkgs.hangitbot}/bin/hangitbot ${args} ${escapeShellArg cfg.token}";
+            };
+          };
         };
       });
 }
