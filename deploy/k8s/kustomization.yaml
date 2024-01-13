@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization.json
+
+resources:
+  - deployment.yaml
+secretGenerator:
+  - name: hangitbot
+    files:
+      - config/DATABASE_URI
+      - config/TGBOT_TOKEN
+images:
+  - name: <Image>
+    newName: ghcr.io/senseab/hangitbot
+    newTag: v0.0.1

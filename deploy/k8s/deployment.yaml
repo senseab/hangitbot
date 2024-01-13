@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hangitbot
+spec:
+  selector:
+    matchLabels:
+      app: hangitbot
+  template:
+    metadata:
+      labels:
+        app: hangitbot
+    spec:
+      containers:
+      - name: hangitbot
+        image: <Image>
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+        envFrom:
+          - secretRef:
+              name: hangitbot
+        env:
+          - name: API_URL
+            value: https://tgapi.sense-t.eu.org/
+
