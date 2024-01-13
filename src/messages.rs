@@ -34,3 +34,7 @@ pub const BOT_TEXT_HANGED_SELF: [&str; 3] = [
     BOT_TEXT_HANGED_SELF_2,
     BOT_TEXT_HANGED_SELF_3,
 ];
+
+pub const BOT_TEXT_HANG_BOT: &'static str = "机器人是无法被吊死的……";
+pub const BOT_TEXT_HANG_CHANNEL: &'static str = "这是个频道……";
+pub const BOT_TEXT_HANG_ANONYMOUS: &'static str = "这是个幽灵……";

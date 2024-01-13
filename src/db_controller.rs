@@ -1,19 +1,18 @@
 use migration::{Migrator, MigratorTrait};
 use models::prelude::*;
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, ConnectionTrait, Database, DatabaseConnection,
-    DbErr, EntityTrait, QueryFilter, QueryOrder, QuerySelect, QueryTrait, Set, TransactionTrait, FromQueryResult, prelude::BigDecimal,
+    prelude::BigDecimal, ActiveModelTrait, ColumnTrait, ConnectionTrait, Database,
+    DatabaseConnection, DbErr, EntityTrait, FromQueryResult, QueryFilter, QueryOrder, QuerySelect,
+    QueryTrait, Set, TransactionTrait,
 };
 use teloxide::types::{Chat, ChatId};
-use wd_log::{log_debug_ln, log_error_ln, log_info_ln, log_warn_ln};
-
+use wd_log::{log_debug_ln, log_error_ln, log_info_ln};
 
 #[derive(Debug, FromQueryResult)]
 pub struct TopData {
     pub name: String,
     pub counts: BigDecimal,
 }
-
 
 #[derive(Debug, Clone)]
 pub struct Controller {
@@ -31,8 +30,9 @@ impl Controller {
     /// Do migrate
     pub async fn migrate(&self) -> Result<(), DbErr> {
         if let Err(err) = Migrator::install(&self.db).await {
-            log_warn_ln!("{}", err)
+            return Err(err);
         }
+        
         if let Err(err) = Migrator::up(&self.db, None).await {
             Err(err)
         } else {
@@ -81,38 +81,28 @@ impl Controller {
             }
         };
 
+        let query = Stats::find()
+            .select_only()
+            .column(StatsColumn::Name)
+            .column_as(StatsColumn::Counts.sum(), "counts")
+            .group_by(StatsColumn::Name)
+            .order_by_desc(StatsColumn::Counts.sum())
+            .limit(LIMIT);
+
         let query = match chat.is_group() || chat.is_supergroup() {
-            true => {
-                Stats::find().select_only()
-                    .column(StatsColumn::Name)
-                    .column_as(StatsColumn::Counts.sum(), "counts")
-                    .filter(StatsColumn::GroupId.eq(chat.id.0))
-                    .group_by(StatsColumn::Name)
-                    .order_by_desc(StatsColumn::Counts.sum())
-                    .limit(LIMIT).into_model()
-                    .all(&transcation)
-                    .await
-            }
-            false => {
-                let query = Stats::find()
-                    .select_only()
-                    .column(StatsColumn::Name)
-                    .column_as(StatsColumn::Counts.sum(), "counts")
-                    .group_by(StatsColumn::Name)
-                    .order_by_desc(StatsColumn::Counts.sum())
-                    .limit(LIMIT);
-
-                log_debug_ln!(
-                    "SQL: {:?}",
-                    query.build(transcation.get_database_backend()).to_string()
-                );
-
-                query.into_model().all(&transcation).await
-            }
+            true => query.filter(StatsColumn::GroupId.eq(chat.id.0)),
+            false => query,
         };
 
-        match query {
-            Ok(query) => Some(query),
+        log_debug_ln!(
+            "SQL: {:?}",
+            query.build(transcation.get_database_backend()).to_string()
+        );
+
+        let result = query.into_model().all(&transcation).await;
+
+        match result {
+            Ok(result) => Some(result),
             Err(error) => {
                 log_error_ln!("{}", error);
                 None

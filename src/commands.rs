@@ -18,7 +18,7 @@ use crate::{
     messages::{
         BOT_ABOUT, BOT_TEXT_HANGED, BOT_TEXT_HANGED_SELF, BOT_TEXT_IS_CHANNEL, BOT_TEXT_NO_TARGET,
         BOT_TEXT_TOP_GLOBAL, BOT_TEXT_TOP_GROUP, BOT_TEXT_TOP_NONE, BOT_TEXT_TOP_TEMPLATE,
-        BOT_TEXT_TOP_TITLE,
+        BOT_TEXT_TOP_TITLE, BOT_TEXT_HANG_BOT, BOT_TEXT_HANG_ANONYMOUS, BOT_TEXT_HANG_CHANNEL,
     },
 };
 
@@ -106,6 +106,18 @@ impl CommandHandler {
 
         match reply.from() {
             Some(user) => {
+                if user.is_bot {
+                    return self.send_text_reply(bot, reply, BOT_TEXT_HANG_BOT.to_string()).await
+                }
+
+                if user.is_anonymous() {
+                    return self.send_text_reply(bot, reply, BOT_TEXT_HANG_ANONYMOUS.to_string()).await
+                }
+
+                if user.is_channel() {
+                    return self.send_text_reply(bot, reply, BOT_TEXT_HANG_CHANNEL.to_string()).await
+                }
+
                 let is_self = match message.from() {
                     Some(f) => f.first_name == user.first_name,
                     None => false,
