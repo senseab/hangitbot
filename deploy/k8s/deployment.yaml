@@ -16,7 +16,7 @@ spec:
         image: <Image>
         resources:
           limits:
-            memory: "128Mi"
+            memory: "64Mi"
             cpu: "100m"
         envFrom:
           - secretRef:

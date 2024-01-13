@@ -83,9 +83,12 @@ impl Controller {
 
         let query = match chat.is_group() || chat.is_supergroup() {
             true => {
-                Stats::find()
+                Stats::find().select_only()
+                    .column(StatsColumn::Name)
+                    .column_as(StatsColumn::Counts.sum(), "counts")
                     .filter(StatsColumn::GroupId.eq(chat.id.0))
-                    .order_by_desc(StatsColumn::Counts)
+                    .group_by(StatsColumn::Name)
+                    .order_by_desc(StatsColumn::Counts.sum())
                     .limit(LIMIT).into_model()
                     .all(&transcation)
                     .await
