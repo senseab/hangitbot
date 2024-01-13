@@ -1,5 +1,5 @@
 pub const BOT_ABOUT: &'static str =
-    "*Hang it bot*\n\nHang your boss up!\n[Github](https://github.com/senseab/saysthbot-reborn) @ssthbot";
+    "*Hang it bot*\n\nHang your boss up\\!\n[Github](https://github.com/senseab/hangitbot) @hangitbot";
 
 pub const BOT_TEXT_NO_TARGET: &'static str = "请在回复某一条信息时使用该指令";
 pub const BOT_TEXT_IS_CHANNEL: &'static str = "这不是个人，吊不起来";

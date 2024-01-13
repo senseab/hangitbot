@@ -1,11 +1,19 @@
 use migration::{Migrator, MigratorTrait};
 use models::prelude::*;
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, Database, DatabaseConnection, DbErr, EntityTrait,
-    PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait,
+    ActiveModelTrait, ColumnTrait, ConnectionTrait, Database, DatabaseConnection,
+    DbErr, EntityTrait, QueryFilter, QueryOrder, QuerySelect, QueryTrait, Set, TransactionTrait, FromQueryResult, prelude::BigDecimal,
 };
-use teloxide::types::ChatId;
-use wd_log::{log_info_ln, log_warn_ln};
+use teloxide::types::{Chat, ChatId};
+use wd_log::{log_debug_ln, log_error_ln, log_info_ln, log_warn_ln};
+
+
+#[derive(Debug, FromQueryResult)]
+pub struct TopData {
+    pub name: String,
+    pub counts: BigDecimal,
+}
+
 
 #[derive(Debug, Clone)]
 pub struct Controller {
@@ -63,28 +71,49 @@ impl Controller {
     }
 
     /// stats
-    pub async fn top(&self, group_id: ChatId) -> Result<Option<Vec<StatsModel>>, DbErr> {
+    pub async fn top(&self, chat: &Chat) -> Option<Vec<TopData>> {
         const LIMIT: u64 = 10;
-        let transcation = self.db.begin().await?;
-
-        let query = match group_id.is_group() {
-            true => {
-                Stats::find()
-                    .filter(StatsColumn::GroupId.eq(group_id.0))
-                    .order_by_desc(StatsColumn::Counts)
-                    .paginate(&transcation, LIMIT)
-                    .fetch()
-                    .await?
-            }
-            false => {
-                Stats::find()
-                    .order_by_desc(StatsColumn::Counts)
-                    .paginate(&transcation, LIMIT)
-                    .fetch()
-                    .await?
+        let transcation = match self.db.begin().await {
+            Ok(t) => t,
+            Err(error) => {
+                log_error_ln!("{}", error);
+                return None;
             }
         };
 
-        Ok(Some(query))
+        let query = match chat.is_group() || chat.is_supergroup() {
+            true => {
+                Stats::find()
+                    .filter(StatsColumn::GroupId.eq(chat.id.0))
+                    .order_by_desc(StatsColumn::Counts)
+                    .limit(LIMIT).into_model()
+                    .all(&transcation)
+                    .await
+            }
+            false => {
+                let query = Stats::find()
+                    .select_only()
+                    .column(StatsColumn::Name)
+                    .column_as(StatsColumn::Counts.sum(), "counts")
+                    .group_by(StatsColumn::Name)
+                    .order_by_desc(StatsColumn::Counts.sum())
+                    .limit(LIMIT);
+
+                log_debug_ln!(
+                    "SQL: {:?}",
+                    query.build(transcation.get_database_backend()).to_string()
+                );
+
+                query.into_model().all(&transcation).await
+            }
+        };
+
+        match query {
+            Ok(query) => Some(query),
+            Err(error) => {
+                log_error_ln!("{}", error);
+                None
+            }
+        }
     }
 }

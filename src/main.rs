@@ -43,14 +43,25 @@ async fn main() {
 
     Commands::repl(bot, move |bot: Bot, message: Message, cmd: Commands| {
         let command_handler = command_handler.clone();
+
         async move {
-            let _ = match cmd {
-                Commands::Help => command_handler.clone().help_handler(&bot, &message).await,
-                Commands::About => command_handler.clone().about_handler(&bot, &message).await,
-                Commands::Top => command_handler.clone().top_handler(&bot, &message).await,
-                Commands::HangIt => command_handler.clone().hangit_handler(&bot, &message).await,
+            let r = match cmd {
+                Commands::Help => command_handler.help_handler(&bot, &message).await,
+                Commands::About => command_handler.about_handler(&bot, &message).await,
+                Commands::Top => command_handler.top_handler(&bot, &message).await,
+                Commands::HangIt => command_handler.hangit_handler(&bot, &message).await,
             };
-            Ok(())
+            
+            match r {
+                Ok(_r) => {
+                    log_debug_ln!("will send: {:?}", _r.text());
+                    Ok(())
+                },
+                Err(err) => {
+                    log_error_ln!("{:?}", err);
+                    Err(err)
+                }
+            }
         }
     })
     .await;
