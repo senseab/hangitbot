@@ -1,10 +1,13 @@
 use clap::Parser;
+use shadow_rs::shadow;
 
 const DEFAULT_DATABASE: &'static str = "sqlite:///hangitbot.db";
 const DEFAULT_API_URL: &'static str = "https://api.telegram.org";
 
+shadow!(build);
+
 #[derive(Parser, Debug)]
-#[clap(author, version, about, long_about = None)]
+#[clap(author, version=build::TAG, about, long_about = None)]
 pub struct Args {
     /// Enable debug mode
     #[clap(short = 'D', long, value_parser, default_value_t = false)]

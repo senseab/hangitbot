@@ -10,4 +10,4 @@ secretGenerator:
 images:
   - name: <Image>
     newName: ghcr.io/senseab/hangitbot
-    newTag: v0.0.1
+    newTag: v0.0.3

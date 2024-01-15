@@ -51,12 +51,12 @@ async fn main() {
                 Commands::Top => command_handler.top_handler(&bot, &message).await,
                 Commands::HangIt => command_handler.hangit_handler(&bot, &message).await,
             };
-            
+
             match r {
                 Ok(_r) => {
                     log_debug_ln!("will send: {:?}", _r.text());
                     Ok(())
-                },
+                }
                 Err(err) => {
                     log_error_ln!("{:?}", err);
                     Err(err)
