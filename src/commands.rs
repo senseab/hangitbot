@@ -8,7 +8,7 @@ use teloxide::{
     prelude::Bot,
     requests::Requester,
     types::{Message, ParseMode},
-    utils::command::BotCommands,
+    utils::{command::BotCommands, markdown::escape},
     RequestError,
 };
 
@@ -137,7 +137,8 @@ impl CommandHandler {
                     BOT_TEXT_HANGED[index]
                 };
 
-                vars.insert("name".to_string(), user.first_name.as_str());
+                let name = escape(user.first_name.as_str());
+                vars.insert("name".to_string(), name.as_str());
 
                 let _ = self
                     .controller
@@ -174,7 +175,7 @@ impl CommandHandler {
         for result in results {
             let mut vars: HashMap<String, String> = HashMap::new();
 
-            vars.insert("name".to_string(), result.name);
+            vars.insert("name".to_string(), escape(result.name.as_str()));
             vars.insert("count".to_string(), result.counts.to_string());
 
             let record = BOT_TEXT_TOP_TEMPLATE.format(&vars).unwrap();
