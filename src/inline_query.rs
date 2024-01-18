@@ -39,13 +39,17 @@ pub async fn inline_menu(db: &Controller, bot: &Bot, q: InlineQuery) -> Result<(
 
     results.push(InlineQueryResult::Article(InlineQueryResultArticle::new(
         name.clone(),
-        format!("{} {}", BOT_TEXT_INLINE_HANG, name),
+        format!("{} {}", BOT_TEXT_INLINE_HANG, name.clone()),
         InputMessageContent::Text(InputMessageContentText::new(hangit_text(
-            name,
+            name.clone(),
             !IS_SELF,
             !NEED_ESCAPE,
         ))),
     )));
+
+    if name.starts_with("@") {
+        results = vec![]
+    }
 
     bot.answer_inline_query(&q.id, results).send().await?;
     Ok(())
@@ -53,6 +57,10 @@ pub async fn inline_menu(db: &Controller, bot: &Bot, q: InlineQuery) -> Result<(
 
 pub async fn inline_anwser(db: &Controller, a: ChosenInlineResult) -> Result<(), RequestError> {
     log_debug_ln!("{:#?}", a);
+
+    if a.result_id == "@" {
+        return Ok(());
+    }
     
     if let Err(err) = db.hangit(&a.result_id, ChatId(0)).await {
         log_error_ln!("{:?}", err);
