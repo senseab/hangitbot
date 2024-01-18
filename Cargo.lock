@@ -1126,6 +1126,7 @@ dependencies = [
  "migration",
  "models",
  "rand",
+ "regex",
  "reqwest",
  "sea-orm",
  "shadow-rs",
