@@ -24,4 +24,8 @@ pub struct Args {
     /// Api Server URL
     #[clap(long, value_parser, env = "API_URL", default_value=DEFAULT_API_URL)]
     pub api_url: String,
+
+    /// GroupID blacklisted
+    #[clap(short = 'b', long, value_parser, env = "GROUP_BANNED", value_delimiter = ',', num_args = 1..)]
+    pub group_banned: Vec<i64>
 }

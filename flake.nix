@@ -75,14 +75,21 @@
               description = lib.mdDoc "Custom telegram api URI";
             };
 
+            groupBanned = mkOption {
+              type = types.listOf types.int;
+              default = [];
+              description = lib.mdDoc "GroupID blacklisted";
+            };
+
             extraOptions = mkOption {
               type = types.str;
               description = lib.mdDoc "Extra option for bot.";
+              default = "";
             };
           };
 
           config = let 
-            args = "${cfg.extraOptions} ${if isString cfg.tgUri then "--api-uri ${escapeShellArg cfg.tgUri}" else ""}";
+            args = "${cfg.extraOptions} ${if cfg?tgUri then "--api-uri ${escapeShellArg cfg.tgUri}" else ""} ${if cfg?groupBanned then concatStringsSep " " (lists.concatMap (group: ["-b ${group}"]) cfg.groupBanned) else ""}";
           in mkIf cfg.enable {
             systemd.services.hangitbot = {
               wantedBy = ["multi-uesr.target"];

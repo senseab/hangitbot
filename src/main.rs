@@ -19,7 +19,7 @@ use teloxide::{
 };
 use utils::message_handler;
 use wd_log::{
-    log_debug_ln, log_error_ln, log_info_ln, log_panic, set_level, set_prefix, DEBUG, INFO,
+    log_debug_ln, log_error_ln, log_info_ln, log_panic, set_level, set_prefix, DEBUG, INFO, log_warn_ln,
 };
 
 #[tokio::main]
@@ -56,7 +56,11 @@ async fn main() {
         .branch(
             Update::filter_message()
                 .branch(dptree::entry().filter_command::<Commands>().endpoint(
-                    |db: Controller, bot: Bot, message: Message, cmd: Commands| async move {
+                    |db: Controller, black_list: Vec<i64>, bot: Bot, message: Message, cmd: Commands| async move {
+                        if black_list.contains(&message.chat.id.0) {
+                            log_warn_ln!("banned group dectected: {:?}", message.chat.id);
+                            return Ok(());
+                        }
                         let r = match cmd {
                             Commands::Help => help_handler(&bot, &message).await,
                             Commands::About => about_handler(&bot, &message).await,
@@ -75,8 +79,12 @@ async fn main() {
                 ))
                 .branch(
                     dptree::filter(|msg: Message| msg.chat.is_group() || msg.chat.is_supergroup())
-                        .endpoint(|db: Controller, msg: Message, me: Me| async move {
-                            let r = message_handler(&db, msg, &me).await;
+                        .endpoint(|db: Controller, message: Message, me: Me, black_list: Vec<i64>| async move {
+                            if black_list.contains(&message.chat.id.0) {
+                                log_warn_ln!("banned group dectected: {:?}", message.chat.id);
+                                return Ok(());
+                            }
+                            let r = message_handler(&db, message, &me).await;
                             match r {
                                 Ok(_) => Ok(()),
                                 Err(err) => {
@@ -99,7 +107,7 @@ async fn main() {
         ));
 
     Dispatcher::builder(bot, handler)
-        .dependencies(dptree::deps![db_controller, me])
+        .dependencies(dptree::deps![db_controller, me, args.group_banned])
         .default_handler(|upd| async move { log_debug_ln!("unhandled update: {:?}", upd) })
         .enable_ctrlc_handler()
         .build()

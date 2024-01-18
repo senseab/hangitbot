@@ -7,6 +7,7 @@ secretGenerator:
     files:
       - config/DATABASE_URI
       - config/TGBOT_TOKEN
+      - config/GROUP_BANNED
 images:
   - name: <Image>
     newName: ghcr.io/senseab/hangitbot
