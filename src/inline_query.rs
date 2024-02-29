@@ -7,7 +7,7 @@ use teloxide::{
     },
     RequestError,
 };
-use wd_log::{log_error_ln, log_debug_ln};
+use wd_log::{log_debug_ln, log_error_ln};
 
 use crate::{
     db_controller::Controller,
@@ -23,7 +23,7 @@ pub async fn inline_menu(db: &Controller, bot: &Bot, q: InlineQuery) -> Result<(
             .iter()
             .map(|n| {
                 InlineQueryResult::Article(InlineQueryResultArticle::new(
-                    n.name.clone(),
+                    format!("{},{}", n.id, n.name),
                     format!("{} {}", BOT_TEXT_INLINE_HANG, n.name),
                     InputMessageContent::Text(InputMessageContentText::new(hangit_text(
                         n.name.clone(),
@@ -37,15 +37,19 @@ pub async fn inline_menu(db: &Controller, bot: &Bot, q: InlineQuery) -> Result<(
         None => vec![],
     };
 
-    results.push(InlineQueryResult::Article(InlineQueryResultArticle::new(
-        name.clone(),
-        format!("{} {}", BOT_TEXT_INLINE_HANG, name.clone()),
-        InputMessageContent::Text(InputMessageContentText::new(hangit_text(
-            name.clone(),
-            !IS_SELF,
-            !NEED_ESCAPE,
-        ))),
-    )));
+    log_debug_ln!("{:?}", results);
+
+    if results.is_empty() {
+        results.push(InlineQueryResult::Article(InlineQueryResultArticle::new(
+            format!("{},{}", 0, name),
+            format!("{} {}", BOT_TEXT_INLINE_HANG, name.clone()),
+            InputMessageContent::Text(InputMessageContentText::new(hangit_text(
+                name.clone(),
+                !IS_SELF,
+                !NEED_ESCAPE,
+            ))),
+        )));
+    }
 
     if name.starts_with("@") {
         results = vec![]
@@ -58,11 +62,15 @@ pub async fn inline_menu(db: &Controller, bot: &Bot, q: InlineQuery) -> Result<(
 pub async fn inline_anwser(db: &Controller, a: ChosenInlineResult) -> Result<(), RequestError> {
     log_debug_ln!("{:#?}", a);
 
-    if a.result_id == "@" {
+    let mut c: Vec<&str> = a.result_id.split(",").collect();
+    c.remove(0);
+    let result_id = c.concat();
+
+    if result_id == "@" {
         return Ok(());
     }
-    
-    if let Err(err) = db.hangit(&a.result_id, ChatId(0)).await {
+
+    if let Err(err) = db.hangit(&result_id, ChatId(0)).await {
         log_error_ln!("{:?}", err);
     }
 
