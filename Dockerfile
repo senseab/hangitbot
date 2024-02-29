@@ -4,7 +4,7 @@ ENV RUSTFLAGS="-C target-feature=-crt-static"
 WORKDIR /usr/src/saysthbot
 COPY . .
 RUN apk add --no-cache rustup openssl-dev build-base && \
-    rustup-init -y --default-toolchain nightly && \
+    rustup-init -y --default-toolchain nightly-2024-02-04 && \
     source ${HOME}/.cargo/env && cargo build --release
 
 FROM alpine
